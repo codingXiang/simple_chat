@@ -1,6 +1,9 @@
 const LEFT = "left";
 const RIGHT = "right";
 
+const EVENT_MESSAGE = "message"
+const EVENT_OTHER = "other"
+
 const userPhotos = [
     "https://www.flaticon.com/svg/static/icons/svg/3408/3408584.svg",
     "https://www.flaticon.com/svg/static/icons/svg/3408/3408537.svg",
@@ -16,33 +19,63 @@ const userPhotos = [
 var PERSON_IMG = userPhotos[getRandomNum(0, userPhotos.length)];
 var PERSON_NAME = "Guest" + Math.floor(Math.random() * 1000);
 
-var url = "ws://" + window.location.host + "/ws";
+var url = "ws://" + window.location.host + "/ws?id=" + PERSON_NAME;
 var ws = new WebSocket(url);
 var name = "Guest" + Math.floor(Math.random() * 1000);
 var chatroom = document.getElementsByClassName("msger-chat")
 var text = document.getElementById("msg");
+var send = document.getElementById("send")
 
+send.onclick = function (e) {
+    handleMessageEvent()
+}
 
 text.onkeydown = function (e) {
     if (e.keyCode === 13 && text.value !== "") {
-        ws.send(JSON.stringify({
-            "photo": PERSON_IMG,
-            "name": PERSON_NAME,
-            "content": text.value,
-        }));
-        text.value = "";
+        handleMessageEvent()
     }
 };
 
 ws.onmessage = function (e) {
-    var msg = JSON.parse(e.data)
-    if (msg.name == PERSON_NAME) {
-        msg = getMessage(msg.name, msg.photo, RIGHT, msg.content);
-    } else {
-        msg = getMessage(msg.name, msg.photo, LEFT, msg.content);
+    var m = JSON.parse(e.data)
+    var msg = ""
+    switch (m.event) {
+        case EVENT_MESSAGE:
+            if (m.name == PERSON_NAME) {
+                msg = getMessage(m.name, m.photo, RIGHT, m.content);
+            } else {
+                msg = getMessage(m.name, m.photo, LEFT, m.content);
+            }
+            break;
+        case EVENT_OTHER:
+            if (m.name != PERSON_NAME) {
+                msg = getEventMessage(m.name + " " + m.content)
+            } else {
+                msg = getEventMessage("您已" + m.content)
+            }
+            break;
     }
     insertMsg(msg, chatroom[0]);
 };
+
+ws.onclose = function (e) {
+    console.log(e)
+}
+
+function handleMessageEvent() {
+    ws.send(JSON.stringify({
+        "event": "message",
+        "photo": PERSON_IMG,
+        "name": PERSON_NAME,
+        "content": text.value,
+    }));
+    text.value = "";
+}
+
+function getEventMessage(msg) {
+    var msg = `<div class="msg-left">${msg}</div>`
+    return msg
+}
 
 function getMessage(name, img, side, text) {
     const d = new Date()
@@ -60,7 +93,7 @@ function getMessage(name, img, side, text) {
         <div class="msg-text">${text}</div>
       </div>
     </div>
-  `;
+  `
     return msg;
 }
 
