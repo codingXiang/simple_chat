@@ -13,8 +13,11 @@ go run main.go
 ## Build
 
 ### Windows
+> 你將獲得main.exe
+> 如果有需要移動到別台windows上運行，
+> 請記得將template資料夾帶上
 ```bash
-GOOS=windows GOARCH=amd64 go build -o bin/app-amd64.exe main.go
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go
 ```
 
 ### Linux
