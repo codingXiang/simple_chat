@@ -5,18 +5,14 @@ const EVENT_MESSAGE = "message"
 const EVENT_OTHER = "other"
 
 const userPhotos = [
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408584.svg",
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408537.svg",
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408540.svg",
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408545.svg",
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408551.svg",
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408556.svg",
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408564.svg",
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408571.svg",
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408578.svg",
-    "https://www.flaticon.com/svg/static/icons/svg/3408/3408720.svg"
+    "https://cdn-icons-png.flaticon.com/512/4825/4825038.png",
+    "https://cdn-icons-png.flaticon.com/512/4825/4825112.png",
+    "https://cdn-icons-png.flaticon.com/512/4825/4825015.png",
+    "https://cdn-icons-png.flaticon.com/512/4825/4825044.png",
+    "https://cdn-icons-png.flaticon.com/512/4825/4825082.png",
+    "https://cdn-icons-png.flaticon.com/512/4825/4825087.png",
 ]
-var PERSON_IMG = userPhotos[getRandomNum(0, userPhotos.length)];
+var PERSON_IMG = userPhotos[getRandomNum(0, userPhotos.length - 1)];
 var PERSON_NAME = "Guest" + Math.floor(Math.random() * 1000);
 
 var url = "ws://" + window.location.host + "/ws?id=" + PERSON_NAME;
@@ -51,7 +47,8 @@ ws.onmessage = function (e) {
             if (m.name != PERSON_NAME) {
                 msg = getEventMessage(m.name + " " + m.content)
             } else {
-                msg = getEventMessage("您已" + m.content)
+                msg = getDateMessage(formatDate(m.timestamp))
+                msg += getEventMessage("您已" + m.content)
             }
             break;
     }
@@ -63,22 +60,46 @@ ws.onclose = function (e) {
 }
 
 function handleMessageEvent() {
-    ws.send(JSON.stringify({
-        "event": "message",
-        "photo": PERSON_IMG,
-        "name": PERSON_NAME,
-        "content": text.value,
-    }));
+    // encode html tag
+    content = text.value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    if (text.value != "") {
+        ws.send(JSON.stringify({
+            "event": "message",
+            "photo": PERSON_IMG,
+            "name": PERSON_NAME,
+            "content": content,
+        }));
+    }
     text.value = "";
 }
 
 function getEventMessage(msg) {
-    var msg = `<div class="msg-left">${msg}</div>`
+    var msg = `<div class="msg-notify">${msg}</div>`
     return msg
 }
 
+function getDateMessage(msg) {
+    var msg = `<div class="msg-date"><span class="time-tag">${msg}</span></div>`
+    return msg
+}
+
+function formatDate(d) {
+    return d.split('T')[0];
+}
+
+function formatTime(d) {
+    return d.toLocaleString('zh-TW', {
+        timeZone: 'Asia/Taipei',
+        hour12: true,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    }).replaceAll("/", "-");
+}
+
 function getMessage(name, img, side, text) {
-    const d = new Date()
+    const d = new Date();
     //   Simple solution for small apps
     var msg = `
     <div class="msg ${side}-msg">
@@ -87,7 +108,7 @@ function getMessage(name, img, side, text) {
       <div class="msg-bubble">
         <div class="msg-info">
           <div class="msg-info-name">${name}</div>
-          <div class="msg-info-time">${d.getFullYear()}/${d.getMonth()}/${d.getDay()} ${d.getHours()}:${d.getMinutes()}</div>
+          <div class="msg-info-time">${formatTime(d)}</div>
         </div>
 
         <div class="msg-text">${text}</div>

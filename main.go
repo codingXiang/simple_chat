@@ -2,15 +2,18 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"gopkg.in/olahol/melody.v1"
-	"net/http"
 )
 
 type Message struct {
 	Event   string `json:"event"`
 	Name    string `json:"name"`
 	Content string `json:"content"`
+	TimeStamp    time.Time `json:"timestamp"`
 }
 
 func NewMessage(event, name, content string) *Message {
@@ -18,6 +21,7 @@ func NewMessage(event, name, content string) *Message {
 		Event:   event,
 		Name:    name,
 		Content: content,
+		TimeStamp: time.Now(),
 	}
 }
 
