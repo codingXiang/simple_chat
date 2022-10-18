@@ -1,0 +1,6 @@
+ARG PORT
+FROM scratch
+ADD . /
+
+EXPOSE ${PORT}
+CMD ["/main"]
